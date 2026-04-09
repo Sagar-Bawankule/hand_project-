@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/code%20ui/code%20ui/code%20ui/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/code%20ui/code%20ui/code%20ui/$1"
+    }
+  ]
+}
