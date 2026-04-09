@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Auto Flex Voice System</title>
+
+<style>
+body{
+    margin:0;
+    background:#0f172a;
+    color:white;
+    font-family:sans-serif;
+    text-align:center;
+}
+
+/* Hand */
+.hand{
+    position:relative;
+    width:260px;
+    height:360px;
+    border:1px dashed cyan;
+    margin:30px auto;
+}
+
+.palm{
+    position:absolute;
+    bottom:80px;
+    left:50%;
+    transform:translateX(-50%);
+    width:100px;
+    height:100px;
+    background:cyan;
+}
+
+.finger{
+    position:absolute;
+    width:15px;
+    background:linear-gradient(to top, cyan, white);
+    transform-origin:bottom;
+    transition:0.2s;
+}
+
+#thumb{bottom:120px;left:40px;height:60px;transform:rotate(-30deg);}
+#index{bottom:180px;left:80px;height:80px;}
+#middle{bottom:190px;left:110px;height:90px;}
+#ring{bottom:180px;left:140px;height:80px;}
+#pinky{bottom:160px;left:170px;height:60px;}
+
+.msg{
+    font-size:30px;
+    color:#00ffaa;
+}
+</style>
+</head>
+
+<body>
+
+
+  
+<div class="sidebar">
+  <h2>FLEX CONTROL</h2>
+  <div class="nav-item">Dashboard</div>
+  <div class="nav-item">Hand Mapping</div>
+  <div class="nav-item active">Logs</div>
+</div>
+
+<h2>Auto Gesture Voice System</h2>
+
+<div class="hand">
+<div class="palm"></div>
+<div class="finger" id="thumb"></div>
+<div class="finger" id="index"></div>
+<div class="finger" id="middle"></div>
+<div class="finger" id="ring"></div>
+<div class="finger" id="pinky"></div>
+</div>
+
+<div class="msg" id="msg">WAITING...</div>
+
+<script>
+
+// AUDIO
+const audio = {
+    food:new Audio("micu/food.mp3"),
+    water:new Audio("micu/water.mp3"),
+    medicine:new Audio("micu/medicine.mp3"),
+    washroom:new Audio("micu/washroom1.mp3"),
+    fan:new Audio("micu/fan.mp3"),
+    help:new Audio("micu/help.mp3")
+};
+
+// HAND UPDATE
+function updateHand(v){
+    const ids=['thumb','index','middle','ring','pinky'];
+
+    v.forEach((val,i)=>{
+        let f=document.getElementById(ids[i]);
+
+        if(ids[i]=='thumb'){
+            f.style.transform=`rotate(${-30+val/2}deg)`;
+        }else{
+            f.style.transform=`rotateX(${val}deg)`;
+        }
+    });
+}
+
+// GESTURE MAP
+const map={
+    food:[80,0,0,0,0],
+    water:[0,80,0,0,0],
+    medicine:[0,0,80,0,0],
+    washroom:[0,0,0,80,0],
+    fan:[0,0,0,0,80],
+    help:[80,80,80,80,80]
+};
+
+const text={
+    food:"I Need Food",
+    water:"I Need Water",
+    medicine:"I Need Medicine",
+    washroom:"I Need Washroom",
+    fan:"Fan ON/OFF",
+    help:"I Need Help"
+};
+
+let lastGesture="";
+
+// AUTO DETECT (Replace with ESP data later)
+function getGesture(){
+    let r=Math.random();
+
+    if(r<0.15) return "food";
+    else if(r<0.30) return "water";
+    else if(r<0.45) return "medicine";
+    else if(r<0.60) return "washroom";
+    else if(r<0.75) return "fan";
+    else if(r<0.90) return "help";
+    else return "";
+}
+
+// MAIN LOOP
+setInterval(()=>{
+
+    let g=getGesture();
+
+    if(g!=="" && g!==lastGesture){
+
+        updateHand(map[g]);
+        document.getElementById("msg").innerText=text[g];
+
+        audio[g].currentTime=0;
+        audio[g].play();
+
+        lastGesture=g;
+    }
+
+    if(g===""){
+        lastGesture="";
+    }
+
+},3000);
+
+</script>
+
+</body>
+</html>

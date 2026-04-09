@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flex Sensor Hand Mapping</title>
+
+<style>
+:root {
+    --primary: #00d2ff;
+    --dark: #1a1a2e;
+}
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: #0f3460;
+    color: white;
+    display: flex;
+    height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 240px;
+    background: var(--dark);
+    padding: 20px;
+    border-right: 1px solid var(--primary);
+}
+
+.nav-item {
+    padding: 15px 0;
+    border-bottom: 1px solid #333;
+    opacity: 0.7;
+}
+
+.nav-item.active {
+    opacity: 1;
+    color: var(--primary);
+    font-weight: bold;
+}
+
+/* Main */
+.main-content {
+    flex-grow: 1;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Grid */
+.mapping-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+}
+
+/* Hand */
+.hand-skeleton {
+    position: relative;
+    width: 300px;
+    height: 400px;
+    border: 1px dashed var(--primary);
+    border-radius: 20px;
+}
+
+.palm {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 120px;
+    background: var(--primary);
+    border-radius: 20px;
+}
+
+/* Fingers */
+.finger {
+    position: absolute;
+    width: 18px;
+    background: linear-gradient(to top, var(--primary), white);
+    border-radius: 10px;
+    transform-origin: bottom center;
+    transition: 0.1s;
+}
+
+#thumb  { height: 60px; bottom: 130px; left: 60px; transform: rotate(-30deg); }
+#index  { height: 90px; bottom: 200px; left: 100px; }
+#middle { height: 100px; bottom: 210px; left: 140px; }
+#ring   { height: 90px; bottom: 200px; left: 180px; }
+#pinky  { height: 70px; bottom: 180px; left: 220px; }
+
+/* Data Panel */
+.data-panel {
+    background: var(--dark);
+    padding: 20px;
+    border-radius: 15px;
+    width: 260px;
+}
+
+.data-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #333;
+}
+
+.data-row span:last-child {
+    color: var(--primary);
+}
+
+/* Buttons */
+.btn-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+button {
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: #00d2ff;
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>FLEX CONTROL</h2>
+    <div class="nav-item active">Hand Mapping</div>
+</div>
+
+<div class="main-content">
+    <h2>Real-Time Hand Mapping</h2>
+
+    <div class="mapping-container">
+
+        <!-- Hand -->
+        <div class="hand-skeleton">
+            <div class="palm"></div>
+            <div class="finger" id="thumb"></div>
+            <div class="finger" id="index"></div>
+            <div class="finger" id="middle"></div>
+            <div class="finger" id="ring"></div>
+            <div class="finger" id="pinky"></div>
+        </div>
+
+        <!-- Data -->
+        <div class="data-panel">
+            <h3>Sensor Data</h3>
+
+            <div class="data-row"><span>Thumb</span><span id="val1">NO Gesture</span></div>
+            <div class="data-row"><span>Index</span><span id="val2">NO Gesture</span></div>
+            <div class="data-row"><span>Middle</span><span id="val3">NO Gesture</span></div>
+            <div class="data-row"><span>Ring</span><span id="val4">NO Gesture</span></div>
+            <div class="data-row"><span>Pinky</span><span id="val5">NO Gesture</span></div>
+            <div class="data-row"><span>Index + Middle</span><span id="val6">NO Gesture</span></div>
+
+            <!-- Buttons -->
+            <h3>Manual Control</h3>
+            <div class="btn-container">
+                <button onclick="controlFinger(1)">Thumb</button>
+                <button onclick="controlFinger(2)">Index</button>
+                <button onclick="controlFinger(3)">Middle</button>
+                <button onclick="controlFinger(4)">Ring</button>
+                <button onclick="controlFinger(5)">Pinky</button>
+                <button onclick="controlFinger(6)">Reset</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+
+let counter = 0;
+
+function demoData() {
+    counter++;
+
+    let values = [];
+
+    for(let i=0;i<5;i++){
+        let val;
+
+        // 🔥 every 5th update force bend
+        if(counter % 5 === 0){
+            val = 70 + Math.random()*20;
+        } else {
+            val = Math.random()*40;
+        }
+
+        values.push(val);
+    }
+
+    return values;
+}
+
+function updateUI(values) {
+    const ids = ['thumb','index','middle','ring','pinky'];
+
+    values.forEach((val,i) => {
+        let finger = document.getElementById(ids[i]);
+        let text = document.getElementById("val"+(i+1));
+
+        if(val > 50){
+            finger.style.transform = `rotateX(${val}deg)`;
+            text.innerText = Math.floor(val) + "°";
+        } else {
+            text.innerText = "No Bend";
+        }
+    });
+
+    // 🔥 Index + Middle combined
+    let combined = (values[1] > 50 && values[2] > 50);
+    document.getElementById("val6").innerText = combined ? "BEND" : "No Bend";
+}
+
+// Auto update
+setInterval(() => {
+    updateUI(demoData());
+}, 500);
+
+function controlFinger(id) {
+    let values = [0,0,0,0,0];
+
+    if(id == 1) values[0] = 80;
+    if(id == 2) values[1] = 80;
+    if(id == 3) values[2] = 80;
+    if(id == 4) values[3] = 80;
+    if(id == 5) values[4] = 80;
+
+    updateUI(values);
+}
+
+</script>
+
+</body>
+</html>

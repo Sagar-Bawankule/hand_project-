@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flex Gesture Master Control</title>
+
+<style>
+:root {
+    --primary: #00d2ff;
+    --accent: #00ffaa;
+    --dark: #0f172a;
+    --card: rgba(30, 41, 59, 0.7);
+    --text: #f8fafc;
+    --success: #22c55e;
+}
+
+body {
+    background: radial-gradient(circle at center, #1e293b, #0f172a);
+    color: var(--text);
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    display: flex;
+}
+
+.sidebar {
+    width: 260px;
+    background: rgba(15, 23, 42, 0.9);
+    padding: 30px 20px;
+}
+
+.main-content {
+    flex: 1;
+    padding: 40px;
+}
+
+.btn-system {
+    padding: 15px 40px;
+    border-radius: 50px;
+    border: none;
+    background: var(--primary);
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-system.active {
+    background: var(--success);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.visualizer-card, .data-panel {
+    background: var(--card);
+    padding: 20px;
+    border-radius: 20px;
+}
+
+/* HAND */
+.hand {
+    position: relative;
+    width: 200px;
+    height: 250px;
+    margin: auto;
+}
+   
+.palm {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 140px;
+    background: #334155;
+    border-radius: 30px;
+}
+
+.finger {
+    position: absolute;
+    width: 20px;
+    height: 80px;
+    background: var(--accent);
+    border-radius: 10px;
+    transform-origin: bottom center;
+    transition: transform 0.4s ease;
+}
+
+#thumb { left: -10px; bottom: 60px; transform-origin: bottom right;}
+#index { left: 30px; bottom: 140px;}
+#middle { left: 65px; bottom: 150px;}
+#ring { left: 100px; bottom: 140px;}
+#pinky { left: 135px; bottom: 120px;}
+
+.message-display {
+    background: black;
+    padding: 20px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.sensor-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 5px 0;
+}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+<h2>FLEX SYSTEM</h2>
+</div>
+
+<div class="main-content">
+
+<button class="btn-system" id="startBtn" onclick="enableSystem()">ENABLE SYSTEM</button>
+
+<div class="dashboard-grid">
+
+<div class="visualizer-card">
+<h3>Hand Visual</h3>
+
+<div class="hand">
+    <div class="palm"></div>
+    <div class="finger" id="thumb"></div>
+    <div class="finger" id="index"></div>
+    <div class="finger" id="middle"></div>
+    <div class="finger" id="ring"></div>
+    <div class="finger" id="pinky"></div>
+</div>
+
+</div>
+
+<div class="data-panel">
+
+<div class="message-display">
+<div id="msg">AWAITING INPUT...</div>
+</div>
+
+<h3>Sensor Status</h3>
+
+<div class="sensor-row"><span>Thumb</span><span id="val1">0°</span></div>
+<div class="sensor-row"><span>Index</span><span id="val2">0°</span></div>
+<div class="sensor-row"><span>Middle</span><span id="val3">0°</span></div>
+<div class="sensor-row"><span>Ring</span><span id="val4">0°</span></div>
+<div class="sensor-row"><span>Pinky</span><span id="val5">0°</span></div>
+
+<div class="sensor-row"><span>Gesture</span><span id="gesture-name">None</span></div>
+
+<h3>Manual Test</h3>
+<button onclick="manualTrigger('food')">Food</button>
+<button onclick="manualTrigger('water')">Water</button>
+<button onclick="manualTrigger('medicine')">Medicine</button>
+<button onclick="manualTrigger('washroom')">Washroom</button>
+<button onclick="manualTrigger('fan')">Fan</button>
+<button onclick="manualTrigger('help')">Help</button>
+
+</div>
+
+</div>
+</div>
+
+<script>
+
+let systemActive = false;
+let lastGesture = "";
+
+const messages = {
+    food: "I Need Food",
+    water: "I Need Water",
+    medicine: "I Need Medicine",
+    washroom: "I Need to go to the Washroom",
+    fan: "I Want Fan to On/Off",
+    help: "I Need Help (Other)"
+};
+
+function enableSystem() {
+    systemActive = true;
+    document.getElementById("startBtn").innerText = "SYSTEM ONLINE";
+    document.getElementById("startBtn").classList.add("active");
+    setInterval(mainLoop, 1000);
+}
+
+function updateHandVisuals(values) {
+    for(let i=0;i<5;i++){
+        document.getElementById("val"+(i+1)).innerText = Math.floor(values[i])+"°";
+    }
+
+    document.getElementById("thumb").style.transform = `rotate(${values[0]}deg)`;
+    document.getElementById("index").style.transform = `rotate(${values[1]}deg)`;
+    document.getElementById("middle").style.transform = `rotate(${values[2]}deg)`;
+    document.getElementById("ring").style.transform = `rotate(${values[3]}deg)`;
+    document.getElementById("pinky").style.transform = `rotate(${values[4]}deg)`;
+}
+
+function animateGesture(type){
+
+    let patterns = {
+        food: [80, 80, 80, 80, 80],
+        water: [10, 80, 80, 10, 10],
+        medicine: [80, 10, 80, 10, 80],
+        washroom: [10, 10, 10, 10, 10],
+        fan: [0, 90, 0, 90, 0],
+        help: [90, 0, 90, 0, 90]
+    };
+
+    if(patterns[type]){
+        updateHandVisuals(patterns[type]);
+    }
+}
+
+function triggerVoice(gesture) {
+    if (gesture === lastGesture) return;
+
+    document.getElementById("msg").innerText = messages[gesture];
+    document.getElementById("gesture-name").innerText = gesture.toUpperCase();
+
+    animateGesture(gesture);
+
+    lastGesture = gesture;
+
+    setTimeout(()=>{
+        document.getElementById("msg").innerText="LISTENING...";
+        document.getElementById("gesture-name").innerText="None";
+        lastGesture="";
+    },3000);
+}
+
+function manualTrigger(type) {
+    if(!systemActive){ alert("Enable system first!"); return;}
+    triggerVoice(type);
+}
+
+function mainLoop(){
+
+    if(!systemActive) return;
+
+    let sensorValues = [
+        Math.random()*90,
+        Math.random()*90,
+        Math.random()*90,
+        Math.random()*90,
+        Math.random()*90
+    ];
+
+    updateHandVisuals(sensorValues);
+
+    let chance = Math.random();
+
+    if(chance<0.05){
+        triggerVoice("water");
+    }
+    else if(chance<0.10){
+        triggerVoice("food");
+    }
+    else if(chance<0.15){
+        triggerVoice("medicine");
+    }
+    else if(chance<0.20){
+        triggerVoice("washroom");
+    }
+    else if(chance<0.25){
+        triggerVoice("fan");
+    }
+    else if(chance<0.30){
+        triggerVoice("help");
+    }
+}
+
+</script>
+
+</body>
+</html>

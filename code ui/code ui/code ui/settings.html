@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flex Gesture Master - 1 Minute Interval</title>
+
+    <style>
+        :root {
+            --primary: #00d2ff;
+            --accent: #00ffaa;
+            --dark: #0f172a;
+            --card: rgba(30, 41, 59, 0.8);
+            --text: #f8fafc;
+            --success: #22c55e;
+        }
+
+        body {
+            background: radial-gradient(circle at center, #1e293b, #0f172a);
+            color: var(--text);
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: rgba(15, 23, 42, 0.95);
+            padding: 30px 20px;
+            border-right: 2px solid var(--primary);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 40px;
+        }
+
+        .btn-system {
+            padding: 15px 40px;
+            border-radius: 50px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
+            margin-bottom: 30px;
+        }
+
+        .btn-system.active {
+            background: var(--success);
+            box-shadow: 0 0 20px var(--success);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .visualizer-card, .data-panel {
+            background: var(--card);
+            padding: 30px;
+            border-radius: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        /* HAND ANIMATION */
+        .hand {
+            position: relative;
+            width: 200px;
+            height: 250px;
+            margin: 50px auto;
+        }
+
+        .palm {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 130px;
+            background: #334155;
+            border-radius: 30px;
+        }
+
+        .finger {
+            position: absolute;
+            width: 22px;
+            height: 80px;
+            background: var(--accent);
+            border-radius: 12px;
+            transform-origin: bottom center;
+            transition: transform 0.5s ease;
+            box-shadow: 0 0 15px rgba(0, 255, 170, 0.4);
+        }
+
+        #thumb { left: -10px; bottom: 50px; height: 60px; transform-origin: bottom right; }
+        #index { left: 25px; bottom: 130px; }
+        #middle { left: 60px; bottom: 140px; }
+        #ring { left: 95px; bottom: 130px; }
+        #pinky { left: 130px; bottom: 110px; height: 60px; }
+
+        .message-box {
+            background: #000;
+            padding: 25px;
+            margin-bottom: 25px;
+            text-align: center;
+            border-radius: 15px;
+            border-left: 5px solid var(--primary);
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #msg {
+            font-size: 1.5rem;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .sensor-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            margin: 8px 0;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+
+        .val-display {
+            font-weight: 900;
+            font-size: 1.3rem;
+            font-family: monospace;
+        }
+
+        .active-val {
+            color: var(--accent);
+            text-shadow: 0 0 10px var(--accent);
+        }
+
+        .inactive-val {
+            color: #475569;
+        }
+
+        .manual-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .manual-grid button {
+            padding: 10px;
+            background: #475569;
+            border: none;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .manual-grid button:hover { background: var(--primary); }
+    </style>
+</head>
+<body>
+
+<div class="sidebar">
+    <h2>FLEX SYSTEM</h2>
+    <p>Status: <span id="sys-status" style="color:red">OFFLINE</span></p>
+    <p style="font-size: 0.8rem; opacity: 0.7;">Interval: 60 Seconds</p>
+</div>
+
+<div class="main-content">
+
+    <button class="btn-system" id="startBtn" onclick="enableSystem()">ENABLE SYSTEM</button>
+
+    <div class="dashboard-grid">
+
+        <div class="visualizer-card">
+            <h3 style="margin-top:0">Hand Simulation</h3>
+            <div class="hand">
+                <div class="palm"></div>
+                <div class="finger" id="thumb"></div>
+                <div class="finger" id="index"></div>
+                <div class="finger" id="middle"></div>
+                <div class="finger" id="ring"></div>
+                <div class="finger" id="pinky"></div>
+            </div>
+        </div>
+
+        <div class="data-panel">
+            <div class="message-box">
+                <div id="msg">SYSTEM READY</div>
+            </div>
+
+            <div class="sensor-display">
+                <div class="sensor-row"><span>Thumb Sensor</span><span id="val1" class="val-display inactive-val">0°</span></div>
+                <div class="sensor-row"><span>Index Sensor</span><span id="val2" class="val-display inactive-val">0°</span></div>
+                <div class="sensor-row"><span>Middle Sensor</span><span id="val3" class="val-display inactive-val">0°</span></div>
+                <div class="sensor-row"><span>Ring Sensor</span><span id="val4" class="val-display inactive-val">0°</span></div>
+                <div class="sensor-row"><span>Pinky Sensor</span><span id="val5" class="val-display inactive-val">0°</span></div>
+            </div>
+
+            <div class="sensor-row" style="background: rgba(0,210,255,0.2); margin-top:15px; border: 1px solid var(--primary);">
+                <strong>GESTURE:</strong>
+                <span id="gesture-name" class="val-display" style="color:white">NONE</span>
+            </div>
+
+            <div class="manual-grid">
+                <button onclick="manualTrigger('food')">FOOD</button>
+                <button onclick="manualTrigger('water')">WATER</button>
+                <button onclick="manualTrigger('medicine')">MEDS</button>
+                <button onclick="manualTrigger('washroom')">TOILET</button>
+                <button onclick="manualTrigger('fan')">FAN</button>
+                <button onclick="manualTrigger('help')">HELP</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let systemActive = false;
+    let sequenceIndex = 0;
+    let loopTimer;
+
+    const gestureData = {
+        food: { text: "I Need Food", sensor: 1 },
+        water: { text: "I Need Water", sensor: 2 },
+        medicine: { text: "I Need Medicine", sensor: 3 },
+        washroom: { text: "I Need to go to the Washroom", sensor: 4 },
+        fan: { text: "I Want Fan to On/Off", sensor: 5 },
+        help: { text: "I Need Help (Other)", sensor: 0 } 
+    };
+
+    const sequence = ["food", "water", "medicine", "washroom", "fan", "help"];
+
+    function enableSystem() {
+        if(systemActive) return;
+        systemActive = true;
+        document.getElementById("startBtn").innerText = "SYSTEM ONLINE";
+        document.getElementById("startBtn").classList.add("active");
+        document.getElementById("sys-status").innerText = "ONLINE";
+        document.getElementById("sys-status").style.color = "var(--success)";
+        
+        runNext();
+        // ६०,००० मिलीसेकंद = १ मिनिट
+        loopTimer = setInterval(runNext, 40000); 
+    }
+
+    function triggerGesture(type) {
+        if (!systemActive) return;
+
+        const info = gestureData[type];
+        document.getElementById("msg").innerText = info.text;
+        document.getElementById("gesture-name").innerText = type.toUpperCase();
+
+        const fingers = ["thumb", "index", "middle", "ring", "pinky"];
+
+        fingers.forEach((fId, i) => {
+            const currentSensor = i + 1;
+            const fingerElem = document.getElementById(fId);
+            const valElem = document.getElementById("val" + currentSensor);
+
+            if (currentSensor === info.sensor || info.sensor === 0) {
+                fingerElem.style.transform = "rotate(80deg)";
+                valElem.innerText = "80°";
+                valElem.className = "val-display active-val";
+            } else {
+                fingerElem.style.transform = "rotate(0deg)";
+                valElem.innerText = "0°";
+                valElem.className = "val-display inactive-val";
+            }
+        });
+
+        // ३० सेकंदानी "Listening" मेसेज येईल, पण व्हॅल्यू ६० सेकंद पूर्ण होईपर्यंत बदलणार नाही
+        setTimeout(() => {
+            if(systemActive) document.getElementById("msg").innerText = "PROCESSING...";
+        }, 30000);
+    }
+
+    function runNext() {
+        triggerGesture(sequence[sequenceIndex]);
+        sequenceIndex = (sequenceIndex + 1) % sequence.length;
+    }
+
+    function manualTrigger(type) {
+        if(!systemActive){ alert("Enable System First!"); return; }
+        // मॅन्युअली क्लिक केल्यावर जुना टाइमर रीसेट करून नवीन १ मिनिट सुरू होईल
+        clearInterval(loopTimer);
+        triggerGesture(type);
+        loopTimer = setInterval(runNext, 60000);
+    }
+</script>
+
+</body>
+</html>
